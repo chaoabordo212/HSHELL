@@ -1,0 +1,16 @@
+https://github.com/TheLocehiliosan/yadm
+https://yadm.io
+https://yadm.io/docs/encryption
+https://yadm.io/docs/bootstrap
+https://yadm.io/docs/encryption
+https://yadm.io/docs/templates
+https://yadm.io/docs/alternates
+https://yadm.io/docs/examples
+https://github.com/DoomHammer/dotfiles
+https://github.com/mes5k/dotfiles
+https://github.com/schneiderfelipe/dotfiles
+https://github.com/pendowski/dotfiles
+https://github.com/cschooley/dotfiles
+https://github.com/Soneji/dotfiles
+https://github.com/akatrevorjay/dotfiles
+https://github.com/elasticdog/transcrypt
