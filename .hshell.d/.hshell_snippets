@@ -1,0 +1,220 @@
+#!/bin/bash
+# $HOME/.shell.d/.shell_snippets
+
+GenDatetime() { export CURRENT_DATETIME=$(date '+%d%m%y.%H%M%S') && echo "$CURRENT_DATETIME"; }
+try() {
+    if "$@" &> /tmp/try_cmd_output; then
+        cat /tmp/try_cmd_output
+        rm /tmp/try_cmd_output
+    else
+        echo "Command failed with exit code $?" >&2
+        cat /tmp/try_cmd_output >&2
+        rm /tmp/try_cmd_output
+        exit 1
+    fi
+}
+
+ForEachLineDo() {
+    targetPath="$1" && commandToRun="$2"
+    while IFS= read -r line
+    do
+        $commandToRun $line
+    done < "$targetPath"
+    echo '' && echo "ForEachLineDo."
+}
+
+Ddsq() { SOURCEPART="$1" && OUTPUTNAME="$2"; sudo fdisk -l $SOURCEPART  >> $OUTPUTNAME.fdisk.log && echo "Started DDSQ operation on $SOURCEPART at $( date +"%T" )"; sudo mkdir tmp; SQP=( "$OUTPUTNAME.img f 444 root root dd if=$SOURCEPART bs=10MB" ) && SFN=( "$OUTPUTNAME.img.squash" ) && sudo mksquashfs tmp $SFN -p "$SQP" -Xcompression-level 2; sudo rm -r tmp; echo "Finished DDSQ operation on $SOURCEPART at $( date +"%T" )"; }
+MkManifest() { target=$1; filepath=$(readlink -f $target) && filestat=$(stat $target); filemanifest=$(echo "  Path: $filepath" && echo $filestat); echo $filemanifest; }
+7Bckp() {
+    HASHSPLIT='#############################################'
+    bckpTarget=$1 && bckpDestination=${2:-$1.7z}
+    if [ -f $bckpTarget.7z ]; then
+        echo "$bckpTarget.7z already exists"
+        echo "Exiting..."
+        sleep 5
+        exit 1
+    elif [ -f $bckpDestination ]; then
+        echo "$bckpDestination already exists"
+        echo "Exiting..."
+        sleep 5
+        exit 1
+    fi
+    echo "Target is: $bckpTarget"
+    echo "Destination is: $bckpDestination"
+    MkManifest $bckpTarget > $bckpTarget.manifest
+    if [ -d $bckpTarget ]; then
+        echo "Target is directory"
+        bckp_dirtree() { echo ''; echo "$HASHSPLIT"; tree -acrfn "$bckpTarget"; }
+        bckp_dirtree >> $bckpTarget.manifest
+    fi
+    7C $bckpTarget.manifest $bckpTarget.temp && rm $bckpTarget.manifest
+    7C $bckpTarget $bckpTarget.temp
+    mv $bckpTarget.temp.7z "$bckpDestination"    
+}
+
+Send2logs() {
+    readonly SCRIPT_NAME=$(basename \$0)
+    log() {
+        echo "$@"
+        logger -p user.notice -t $SCRIPT_NAME "$@"
+    }
+    err() {
+        echo "$@" >&2
+        logger -p user.error -t $SCRIPT_NAME "$@"
+    }
+    log "$1"
+    err "$2"
+}
+
+AlertOnMac() {
+    DEFAULT_COMMAND='echo "Target MAC connected" && echo $FOUND_MAC;'
+    TARGET_MAC="$1"
+    # wordlist=${2:-$DEFAULTWORDLIST}
+    DETECTION_COMMAND=${2:-$DEFAULT_COMMAND}
+    while true; do
+      FOUND_MAC=$( ARP | grep -i $TARGET_MAC)
+      if [ ! -z "$FOUND_MAC" ]; then
+        eval "$DETECTION_COMMAND"
+        break
+      fi
+      sleep 2
+    done
+}
+
+Send2NotifMAC() { TARGET_MAC="$1"; COMMAND='Send2ZenityNotif "Found: $TARGET_MAC"'; AlertOnMac "$TARGET_MAC" "$COMMAND"; }
+
+AlertOnUrl() {
+    DEFAULT_COMMAND='echo "URL $TARGET_URL is online";'
+    TARGET_URL="$1"
+    DETECTION_COMMAND=${2:-$DEFAULT_COMMAND}
+    SLEEP_INTERVAL=${3:-60}
+    while true; do
+        FOUND_URL=$(curl -IsSf "$TARGET_URL" | grep location | cut -d ' ' -f2)
+        if [ ! -z "$FOUND_URL" ]; then
+            eval "$DETECTION_COMMAND"
+            break
+        fi
+        sleep "$SLEEP_INTERVAL"
+    done
+}
+
+AlertOnIP() {
+    DEFAULT_COMMAND='echo "IP $TARGET_IP is online";'
+    TARGET_IP="$1"
+    DETECTION_COMMAND=${2:-$DEFAULT_COMMAND}
+    while true; do
+        FOUND_IP="$(ping -c 1 -W 1 "$1" | grep from)"
+        if [ ! -z "$FOUND_IP" ]; then
+            eval "$DETECTION_COMMAND"
+            break
+        fi
+        sleep 5
+    done
+}
+
+PubkeyGen() {
+    keyname="$1"
+    tmpPath="/dev/shm/"
+    keypath="$tmpPath/$keyname.pem"
+    privkeypath="$keypath".priv.key
+    pubkeypath="$keypath".pub.key
+    openssl genpkey -algorithm x25519 -out "$keypath"
+    cat "$keypath" | grep -v " PRIVATE KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > "$privkeypath"
+    openssl pkey -in "$keypath" -pubout | grep -v " PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > "$pubkeypath"
+    cat "$pubkeypath"
+}
+
+WatchYourLan() {
+    WYL_IFACE="$1"
+    WYL_TZ="$2"
+    WYL_DATA="/var/lib/docker/volumes/WYL_DATA"
+    sudo docker run --name wyl \
+    -e "IFACE=$WYL_IFACE" \
+    -e "TZ=$WYL_TZ" \
+    --network="host" \
+    -v "$WYL_DATA":/data \
+    aceberg/watchyourlan
+}
+
+PhdlList() {
+    PHDL-url() { URL="$1" && yt-dlp "$URL"; }
+    phdl-list-readlines() {
+        targetPath="$1" && commandToRun="$2"
+        while IFS= read -r line; do
+            if [ -f $targetPath.done ]; then
+                lineAlreadyDone="$(cat $targetPath.done | grep $line)"
+                if [ ! -z "$lineAlreadyDone" ]; then
+                    tail -n +2 "$targetPath" > "$targetPath.tmp" && mv "$targetPath.tmp" "$targetPath"
+                    echo '--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---'
+                    echo "Line: $line"
+                    echo "Already done. Skipping to the next."
+                    echo '--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---'
+                else
+                    $commandToRun $line && echo $line >> "$targetPath.done" && tail -n +2 "$targetPath" > "$targetPath.tmp" && mv "$targetPath.tmp" "$targetPath"
+                fi
+            else
+                $commandToRun $line && echo $line >> "$targetPath.done" && tail -n +2 "$targetPath" > "$targetPath.tmp" && mv "$targetPath.tmp" "$targetPath"
+            fi
+        done < "$targetPath"
+    echo '' && echo "Done."
+    }
+    LISTPATH="$1"
+    phdl-list-readlines "$LISTPATH" PHDL-url
+}
+
+BtrfsFix() {
+    SOURCEPARENTSUBVOL="$1" # Specify the path to the parent Btrfs SUBVOLUME
+    DESTSUBVOL="$2"
+
+
+    if [[ ! -d "$SOURCEPARENTSUBVOL" ]]; then # Check if the parent subvolume exists
+        echo "Parent subvolume not found: $SOURCEPARENTSUBVOL"
+        exit 1
+    fi
+
+    if [[ ! -d "$DESTSUBVOL" ]]; then # Check if the destination subvolume exists
+        echo "Destination subvolume not found: $DESTSUBVOL"
+        exit 1
+    fi
+
+    SUBVOLUMES="$(sudo btrfs subvol list -o $SOURCEPARENTSUBVOL | cut -d ' ' -f 9 )"
+    for SUBVOL in ${SUBVOLUMES[@]}; do
+        SUBVOLNAME="$(basename $SUBVOL)"
+        BtrfsSR() { SOURCESUBVOL="$1" && DESTSUBVOL="$2" && sudo btrfs property set "$SOURCESUBVOL" ro true && sudo btrfs send "$SOURCESUBVOL" | sudo btrfs receive "$DESTSUBVOL"; sudo btrfs property set "$SOURCESUBVOL" ro false; }
+        BtrfsRO() { TARGETSUBVOL="$1" && sudo btrfs property set "$TARGETSUBVOL" ro true && echo "$TARGETSUBVOL set to read-only."; }
+        BtrfsRW() { TARGETSUBVOL="$1" && sudo btrfs property set "$TARGETSUBVOL" ro false && echo "$TARGETSUBVOL read-only unset."; }
+        echo "Processing: $SOURCEPARENTSUBVOL/$SUBVOLNAME"
+        echo "Setting READ-ONLY: $SOURCEPARENTSUBVOL/$SUBVOLNAME"
+        BtrfsRO "$SOURCEPARENTSUBVOL/$SUBVOLNAME"
+        echo "Copying: $SOURCEPARENTSUBVOL/$SUBVOLNAME"
+        echo "Destination: $DESTSUBVOL"
+        BtrfsSR "$SOURCEPARENTSUBVOL/$SUBVOLNAME" "$DESTSUBVOL"
+        echo "Unsetting READ-ONLY..."
+        BtrfsRW "$SOURCEPARENTSUBVOL/$SUBVOLNAME"
+        echo "DONE!"
+        sleep 1
+    done
+}
+
+GenRandWord() {  # Output random words from specified or default wordlist
+    wordlist=${2:-$DEFAULTWORDLIST}
+    if [ ! -f "$wordlist" ]; then
+        echo "Wordlist file not found: $wordlist"
+        return 1
+    fi
+    total_words=$(wc -l < "$wordlist")
+    num_words="${1:-3}"
+    if [ "$num_words" -lt 1 ]; then
+        echo "Number of words must be at least 1."
+        return 1
+    fi
+    for ((i=1; i<=$num_words; i++)); do
+        rand=$((RANDOM % total_words + 1))
+        word=$(sed -n "${rand}p" "$wordlist")
+        echo -n "$word "
+        if [ "$i" -eq "$num_words" ]; then
+            echo
+        fi
+    done
+}
+
