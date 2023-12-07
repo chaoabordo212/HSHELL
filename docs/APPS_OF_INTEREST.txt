@@ -1,0 +1,16 @@
+passwd
+passmass
+pgp
+sssd
+pgpgpg
+openssl
+passphrase-encoding
+tomb
+pass-tomb
+pwgen
+passphrase_generator
+pass
+passky
+pass-tail
+pass-audit
+pass-otp
