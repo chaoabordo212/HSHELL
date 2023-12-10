@@ -1,0 +1,127 @@
+#!/bin/bash
+# $HOME/.shell.d/.shell_functions
+
+# Term, Sys & Logging
+C() { printf %s "$@" | XC; }
+SY() { sudo tail -n "${1:-300}" -f /var/log/syslog | bat --paging=never -l log; }
+RepCmdMatching() { repeatstr=$1; repeatcmd=$( history | grep "$repeatstr" | head -n 1 | cut -c 7- ); printf "$repeatcmd\n"; $($repeatcmd); }
+VariablesImport() { export $(grep -v '^#' "$1" | xargs -d '\n'); }
+VariablesUnset() { unset $(grep -v '^#' "$1" | sed -E 's/(.*)=.*/\1/' | xargs); }
+Functions() { cat ~/.bash_functions ~/.bash_snippets | grep "$1"; }
+Clip() { clip=$1; if [ "$clip" == "C" ]; then cat /dev/null > ~/.clip; elif [ "$clip" == "E" ]; then nano ~/.clip; elif [ "$clip" != "" ]; then echo "$clip" >> ~/.clip; else cat ~/.clip; fi; }
+ClipTo() { clip="$1"; clip_location=${2:-$clip_location}; if [ ! -w "$clip_location" ]; then if [ -e "$clip_location" ]; then echo "Error: Cannot write to $clip_location"; return 1; else touch "$clip_location"; if [ $? -ne 0 ]; then echo "Error: Cannot create $clip_location"; return 1; fi; fi; fi; if [ "$clip" == "C" ]; then cat /dev/null > "$clip_location"; elif [ "$clip" != "" ]; then echo "$clip" >> "$clip_location"; else cat "$clip_location"; fi; }
+Toread() { toread=$1; if [ "$toread" == "C" ]; then cat /dev/null > ~/.toread; elif [ "$toread" != "" ]; then echo "$toread | $( date '+%d-%m-%Y | %H:%M:%S' )" >> ~/.toread; else bat ~/.toread; fi; }
+cheatsh() { cheatsh_input="$1" && cheatsh_result=$(curl -s "cheat.sh/$1") && echo "$cheatsh_result"; }
+AptManuallyInstalled() { sudo apt-mark showmanual; }
+AptListManuallyInstalled() { comm -23 <(aptitude search '~i !~M' -F '%p' | sed "s/ *$//" | sort -u) <(gzip -dc /var/log/installer/initial-status.gz | sed -n 's/^Package: //p' | sort -u); }
+TaintedKernel() { for i in $(seq 18); do echo $(($i-1)) $((4609>>($i-1)&1)); done; }
+LogTerminal() { script -f -O "$1"; sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' "$1"; }
+XpropName() { xprop_var=$( xprop  _NET_WM_PID; ) && xprop_pid=$( echo "$xprop_var" | cut -d ' ' -f3; ) && xprop_name=$( sudo ps -eo pid,comm | grep "$xprop_pid" | sed -e 's/^[[:space:]]*//' | cut -d " " -f2 ); echo $xprop_name; }
+XpropSuspend() { process-suspend "$(XpropName)"; }
+XpropStop() { process-stop "$(XpropName)"; }
+XpropTerminate() { process-terminate "$(XpropName)"; }
+XpropResume() { process-resume "$(XpropName)"; }
+
+# Send to frontend
+Send2Syslog() { message="$1"; logger "$message"; }
+Send2Kdialog() { notifText=$1 && notifTime=${2:-10}; kdialog --passivepopup "$notifText" "$notifTime"; }
+Send2NotifLow() { notify-send --urgency=low "$1"; }
+Send2NotifCrit() { notify-send --urgency=critical "$1"; }
+Send2NotifExit() { TARGETAPPNAME="$(XpropName)" && while pgrep -x $TARGETAPPNAME  >/dev/null; do sleep 1; done && notify-send "Application $TARGETAPPNAME has exited."; }
+Send2ZenityInfo() { ZENITY_TEXT="$1"; zenity --info --text="$ZENITY_TEXT"; }
+Send2ZenityEntry() { ZENITY_TEXT="$1" && ZENITY_ENTRY="$2"; zenity --entry --text="$ZENITY_TEXT" --entry-text="$ZENITY_ENTRY"; }
+Send2ZenityNotif() { ZENITY_TEXT="$1"; zenity --notification --text="$ZENITY_TEXT"; }
+Send2ZenityError() { ZENITY_TEXT="$1"; zenity --error --text="$ZENITY_TEXT"; }
+Send2Telegram() { telegram-send --config "$TELEGRAM_SEND_CONFIG" "$1"; }
+
+# File utils
+lD() { ls -d "${1:-$PWD}"/.* -d "${1:-$PWD}"/*; }
+Btail() { tail -n "${2:-300}" -f "$1" | bat --paging=never -l log; }
+DU() { sudo du -a -BM -P -d 1 -t 100000 -x "$@"; }
+DUS() { sudo du -a -BM -P -d 1 -t 100000 -x "$@" | sort -n; }
+Copy() { sudo rsync --update --progress --timeout=60 -zaPrvvh --append-verify --stats --info=progress2 $1 $2 && sudo find $1 -depth -type d -empty -delete; }
+Move() { sudo rsync --update --remove-source-files --progress --timeout=60 -zaPrvvh --append-verify --stats --info=progress2 $1 $2 && sudo find $1 -depth -type d -empty -delete; }
+TakeOwnership() { sudo chown -R $(id -u):$(id -g) "$1"; }
+Shrd() { sudo shred -fuz "$1"; }
+Find() { find . -type f -exec grep -l "$1" {} +; }
+WatchFileSize() { watch -n 10 -c "lsd -FlAhSr --total-size \"$1\""; }
+WatchFolder() { watch -n 1 -c "lsd -FlAhtr \"$1\""; }
+WatchFolderTail() { watch -n 1 -c "lsd -FlAhtr \"$1\" | tail -n ${2:-10}"; }
+DetectSecrets() { SCANPATH="${1:-$PWD}" && sudo detect-secrets -C "$SCANPATH" -c 4 scan; }
+
+# Mounts & FS
+MountNetwork() { MountPath="$1" && MountPoint="$2" && MntPort="$(echo ${MountPath::-1} | cut -d ':' -f2)" && MntPort=${MntPort:-22}; sudo mkdir -p "$MountPoint"; sshfs -p "$MntPort" -o allow_other,IdentityFile=/home/united/.ssh/id_rsa "$MountPath" "$MountPoint"; echo "Mounted $MountPath to $MountPoint"; sleep 2; }
+MountSMB() { MountPath="$1" && MountPoint="$2"; sudo mkdir -p "$MountPoint"; sudo mount -t cifs -o username=$SMB_USER "//$MountPath" "$MountPoint"; }
+MountPartition() { MountPath="$1" && MountPoint="$2" ; sudo mkdir -p "$MountPoint"; sudo mount "$MountPath" "$MountPoint"; echo "Mounted $MountPath to $MountPoint"; sleep 2; }
+MountUUID() { MountPath="$1" && MountPoint="$2" ; sudo mkdir -p "$MountPoint"; sudo mount -U "$MountPath" "$MountPoint"; echo "Mounted $MountPath$ $MountPoint"; sleep 2; }
+MountFile() { devFile="$1" && devSize=$2 && devMount="$3"; truncate -s $devSize "$devFile" && mkfs.ext4 "$devFile" && sudo mkdir -p "$devMount" && sudo mount "$devFile" "$devMount"; echo "File $devFile mounted on $devMount"; }
+MkRamdisk() { MountPoint="$1" && RamdiskSize="$2" && sudo mkdir -p $MountPoint && sudo mount -t tmpfs -o size=$RamdiskSize tmpfs "$MountPoint"; }
+
+# Btrfs
+BtrfsRO() { target_subvol=${1:-"/"} && sudo btrfs property set "$target_subvol" ro true && echo "$target_subvol set to read-only."; }
+BtrfsRW() { target_subvol=${1:-"/"} && sudo btrfs property set "$target_subvol" ro false && echo "$target_subvol read-only unset."; }
+BtrfsSR() { source_subvol="$1" && dest_subvol="$2" && sudo btrfs property set "$source_subvol" ro true && sudo btrfs send "$source_subvol" | sudo btrfs receive "$dest_subvol"; sudo btrfs property set "$source_subvol" ro false; }
+BtrfsRM() { target_subvol="$1" && sudo btrfs subvolume delete "$target_subvol"; }
+BtrfsBal() { target_subvol=${1:-"/"} && sudo btrfs balance start --full-balance --bg "$target_subvol"; watch -n 5 -c "sudo btrfs balance status -v $target_subvol";}
+BtrfsScrub() { target_subvol=${1:-"/"} && sudo btrfs scrub start "$target_subvol";  watch -n 5 -c "sudo btrfs scrub status -d --human-readable $target_subvol";}
+BtrfsDefrag() { target_subvol=${1:-"/"} && sudo btrfs filesystem defragment -r -f "$target_subvol"; }
+BtrfsChk() { target_part="$1" && sudo btrfs check --force -p --check-data-csum "$target_part"; }
+BtrfsBckp() { BTRFSSNAP="$(BtrfsSnap)" && BTRFSSNAP_SUBVOL="$(echo $BTRFSSNAP | grep Create | head -n 1 | cut -d "'" -f 2)" && MntREPO-BCKP && sleep 2 && btrfs-backup "$BTRFSSNAP_SUBVOL" "$BTRFS_BACKUP_SUBVOL" && sudo btrfs subvol sync "$BTRFS_BACKUP_SUBVOL"; }
+BtrfsDelAllNew() { BTRFS_ROOTSUBVOL=${1:-"/.snapshots/.manual"}; sudo tree -d -i -n -f -L 2 "$BTRFS_ROOTSUBVOL" | head -n -2 > /tmp/btrfs.log; ForEachLineDo /tmp/btrfs.log BtrfsRW; ForEachLineDo /tmp/btrfs.log BtrfsRM && rm /tmp/btrfs.log; }
+BtrfsPurgeAll() { BtrfsDelAll && sudo timeshift --delete-all && BtrfsSync && sudo update-grub; }
+BtrfsSync() { target_subvol=${1:-"/"} && sudo btrfs subvol sync "$target_subvol"; }
+
+# Hardware
+DiskDisconnect() { echo 1 | sudo tee "/sys/block/$1/device/delete"; }
+DiskScan() { sudo su -c " echo '- - -' | tee /sys/class/scsi_host/host*/scan"; }
+Backlight() { BacklightLevel=$1; xrandr --output LVDS-1 --brightness $BacklightLevel; }
+InputDisable() { deviceid="$1"; sudo xinput --disable "$deviceid"; }
+InputEnable() { deviceid="$1"; sudo xinput --enable "$deviceid"; }
+
+# Net interface utils
+NetDown() { netid=$1; echo "Turning off network $netid via ifconfig"; sleep 1; sudo ip link set $netid down && sleep 3; echo "Network $netid turned off"; }
+NetUp() { netid=$1; echo "Turning on network $netid via ifconfig"; sleep 1; sudo ip link set $netid up && sleep 3; echo "Network $netid turned on"; }
+BluetoothToggle() {  BLUETOOTH_DEVNUM="$(sudo rfkill list bluetooth | grep tpacpi | cut -d ':' -f1)"; BLUETOOTH_DEVSTAT="$(sudo rfkill | grep $BLUETOOTH_DEVNUM )"; BLUETOOTH_UNBLOCKED="$(echo $BLUETOOTH_DEVSTAT | cut -d ' ' -f5,6 | grep unblocked)"; if [ "$BLUETOOTH_UNBLOCKED" == "" ]; then echo "Unblocking Bluetooth" && sudo rfkill unblock $BLUETOOTH_DEVNUM; else echo "Blocking Bluetooth" && sudo rfkill block $BLUETOOTH_DEVNUM; fi;  }
+MacRandom() { echo "Shutting down network interface $1"; sleep 1; sudo ip link set $1 down; sudo macchanger -ab $1; sleep 1; sudo ip link set $1 up; }
+NetDiscover() { subnet_range=$(netstat -rn | head -n 3 | tail -n 1 | cut -d ' ' -f 10 | cut -d '.' -f 1-3)".0/24" && sudo netdiscover -r $subnet_range; }
+Ipaddr-ipv4() { NETINTERFACE="$1" && IPv4=$(ip addr show $NETINTERFACE | grep "inet" | awk '{print $2}' | cut -d '/' -f1); printf "$IPv4"; }
+Ipaddr-dns() { sudo cat /etc/resolv.conf | grep -i ^nameserver | cut -d ' ' -f2; }
+Ipaddr-wan() { IPADDR_WAN=$(curl -s ifconfig.me); echo $IPADDR_WAN; }
+Ipaddr-geo() { IPADDR_WAN=$(Ipaddr-wan) && geoiplookup $IPADDR_WAN; }
+Ipgeo-stats() { NET_INT=$1 && sudo ipgeo -m $NET_INT -lrdw && echo "\n-----------------" && sudo ipgeo -g; }
+FWPause() { minduration=$1; pauseduration=$(( $minduration*60 )); echo "Pauzing firewall for $minduration minutes"; sudo ufw disable && sleep $pauseduration && sudo ufw enable; }
+
+
+# Media streams & conversions
+mp42mp3() { INPUT_FILE="$1" && OUTPUT_FILE="${2:-$1.mp3}"; ffmpeg -i "$INPUT_FILE" -vn -acodec libmp3lame -ac 2 -ab 192k -ar 48000 "$OUTPUT_FILE"; }
+Rtsp2Ffmpeg() { ffmpeg -rtsp_transport tcp -i $1 -vf scale=-1:720 -c:v libx264 -crf 34 -preset medium -f segment -strftime 1 -segment_time 00:10:00 -segment_atclocktime 1 -segment_clocktime_offset 30 -segment_format mkv -acodec copy -reset_timestamps 1 "RtspRec[%Y-%m-%d][%H.%M.%S].mkv"; }
+RtspStream() { mpv --profile=low-latency --cache=no --rtsp-transport=udp $1; }
+MpvStream() { mpv "$1" &>/dev/null; }
+AudioTcpCLient() { AUDIOSERV_IP="$( printf $1 | cut -d ':' -f1)" && AUDIOSERV_PORT="$( printf $1 | cut -d ':' -f2)" && pactl load-module module-tunnel-sink server="tcp:$AUDIOSERV_IP:$AUDIOSERV_PORT" && echo "Running PulseAudio sink at: tcp:$AUDIOSERV_IP:$AUDIOSERV_PORT"; }
+AudioTcpServer() { AUDIOSERV_IP="$( printf $1 | cut -d ':' -f1)" && AUDIOSERV_PORT="$( printf $1 | cut -d ':' -f2)" && pactl load-module module-native-protocol-tcp port=$AUDIOSERV_PORT listen=$AUDIOSERV_IP && echo "PulseAudio native TCP listening at: tcp:$AUDIOSERV_IP:$AUDIOSERV_PORT"; }
+
+# Archive
+7C() { source=$1 && destination="${2:-$1}.7z"; 7z a "$destination" "$source"; }
+7X() { sudo 7z x $1; }
+TarList() { awk -F/ '{ d=$1; for (i=2; i <= NF; i++) { print d; d=d "/" $i }; print d }' dbfiles | awk '{ if (index(old,$0 "/") != 1) { old=$0; print } }' | tar czvf $LOCALFS/$TARFILENAME.tar.gz --no-recursion -T - ; }
+TarZip() { source=$1 && destination=${2:-$1}.zip; tar -czvf "$destination" "$source"; }
+TarAdd() { source=$1 && destination=${2:-$1}.tar; tar -rvf "$destination" "$source"; }
+TarDec() { tar -xvf $1; }
+
+# Misc
+PipxGit() { gitUrl="$1" && sudo pipx install git+"$gitUrl"; }
+GitAddCommitPush() { now="$(date +'%D %R')"; git add . && git commit -m "$now" && git push; }
+64ENC() { printf %s "$@" | base64; }
+64DEC() { printf %s "$@" | base64 -d; }
+PWGEN() { pwgen -cns $1 "1"; }
+KEYGEN() { dd if=/dev/urandom of=/dev/stdout bs=$1 count="1" status=none; }
+QRCODEGEN() { qrurladdress="$1"; qrfilename=$2".png"; qrencode -o $qrfilename -v 10 -m 1 "$qrurladdress"; printf '\n'; echo "QRCode $qrfilename made!"; }
+
+# CPUFREQ-SET
+CpuSet() { minfreq="$1"; maxfreq="$2"; cpugov="$3"; sudo systemctl stop cpufreqd.service; sudo cpufreq-set -c 0 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 1 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 2 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 3 -g $cpugov -d $minfreq -u $maxfreq; echo "MIN=$minfreq, MAX=$maxfreq, GOV=$cpugov"; }
+CUltra() { minfreq="2400MHz"; maxfreq="3200MHz"; cpugov="performance"; sudo cpufreq-set -c 0 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 1 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 2 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 3 -g $cpugov -d $minfreq -u $maxfreq; echo "MIN=$minfreq, MAX=$maxfreq, GOV=$cpugov"; }
+CBalanced() { minfreq="800MHz"; maxfreq="2500MHz"; cpugov="schedutil"; sudo cpufreq-set -c 0 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 1 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 2 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 3 -g $cpugov -d $minfreq -u $maxfreq; echo "MIN=$minfreq, MAX=$maxfreq, GOV=$cpugov"; }
+CConservative() { minfreq="800MHz"; maxfreq="2600MHz"; cpugov="conservative"; sudo cpufreq-set -c 0 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 1 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 2 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 3 -g $cpugov -d $minfreq -u $maxfreq; echo "MIN=$minfreq, MAX=$maxfreq, GOV=$cpugov"; }
+CPowersave() { minfreq="800MHz"; maxfreq="2200MHz"; cpugov="powersave"; sudo cpufreq-set -c 0 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 1 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 2 -g $cpugov -d $minfreq -u $maxfreq && sudo cpufreq-set -c 3 -g $cpugov -d $minfreq -u $maxfreq; echo "MIN=$minfreq, MAX=$maxfreq, GOV=$cpugov"; sudo systemctl stop cpufreqd.service cpufrequtils.service; }
+FanSet() { echo "$1" | sudo tee /proc/acpi/ibm/fan; }
+
