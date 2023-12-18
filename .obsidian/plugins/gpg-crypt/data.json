@@ -1,0 +1,18 @@
+{
+  "firstLoad": false,
+  "encryptAll": true,
+  "renameToGpg": true,
+  "fileRecovery": "encrypted",
+  "backend": "native",
+  "backendNative": {
+    "publicKeyPath": "_public.obsidian.asc",
+    "privateKeyPath": "_private.obsidian.asc"
+  },
+  "backendWrapper": {
+    "executable": "gpg2",
+    "recipient": "",
+    "trustModelAlways": true,
+    "compression": true
+  },
+  "passphraseTimeout": 300
+}

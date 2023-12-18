@@ -1,0 +1,11 @@
+{
+  "onlyFullLink": true,
+  "useSelectedText": true,
+  "htmlAnchorLinks": true,
+  "urlLinks": true,
+  "fuzzySearchTitle": true,
+  "fuzzySearchFilePath": false,
+  "fuzzySearchPath": false,
+  "fuzzySearchTags": false,
+  "linkStore": []
+}
