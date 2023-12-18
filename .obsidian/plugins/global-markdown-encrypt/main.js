@@ -2220,7 +2220,9 @@ var require_jscrypto = __commonJS({
 // main.ts
 var main_exports = {};
 __export(main_exports, {
+  DEFAULT_SALT_VALUE: () => DEFAULT_SALT_VALUE,
   EncryptedFileView: () => EncryptedFileView,
+  GlobalMarkdownEncryptSettingTab: () => GlobalMarkdownEncryptSettingTab,
   VIEW_TYPE_ENCRYPTED_FILE: () => VIEW_TYPE_ENCRYPTED_FILE,
   default: () => GlobalMarkdownEncrypt
 });
@@ -2228,6 +2230,7 @@ module.exports = __toCommonJS(main_exports);
 var import_obsidian = require("obsidian");
 var import_obsidian2 = require("obsidian");
 var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 var subtle = crypto.subtle;
 var JsCrypto = require_jscrypto();
 var b64tou8 = (x) => Uint8Array.from(atob(x), (c) => c.charCodeAt(0));
@@ -2266,11 +2269,12 @@ var aes256gcm = (key) => {
   };
 };
 var VIEW_TYPE_ENCRYPTED_FILE = "encrypted-file-view";
+var DEFAULT_SALT_VALUE = "7f2ea27bd475702540c5211aed17904202a3ac06b0e87fdd8fcdec960a0fe388";
 var EncryptedFileView = class extends import_obsidian2.MarkdownView {
-  constructor(leaf, aesCipher) {
+  constructor(leaf, aesCipher, saltValueToStoreWith) {
     let origSetViewState = leaf.setViewState;
     leaf.setViewState = function(viewState, eState) {
-      if (viewState.state.file && viewState.state.file.endsWith(".aes256") && viewState.type !== VIEW_TYPE_ENCRYPTED_FILE || viewState.state.mode && viewState.state.mode !== "source" || viewState.state.source && viewState.state.source !== false) {
+      if (viewState.type !== VIEW_TYPE_ENCRYPTED_FILE || viewState.state.mode && viewState.state.mode !== "source" || viewState.state.source && viewState.state.source !== false) {
         this.detach();
         new import_obsidian.Notice("unsupported: reading or unencrypted mode");
         return new Promise((resolve) => {
@@ -2285,7 +2289,12 @@ var EncryptedFileView = class extends import_obsidian2.MarkdownView {
     this.shouldUpdate = false;
     this.aesCipher = null;
     this.origIv = "";
+    this.saltValueToStoreWith = "";
     this.aesCipher = aesCipher;
+    this.saltValueToStoreWith = saltValueToStoreWith;
+  }
+  // try to prevent data leak to internal data structure, which is at outside of the editor
+  onInternalDataChange() {
   }
   canAcceptExtension(extension) {
     return extension == "aes256";
@@ -2327,7 +2336,8 @@ var EncryptedFileView = class extends import_obsidian2.MarkdownView {
           const encData = JSON.stringify({
             iv,
             tag,
-            ciphertext
+            ciphertext,
+            salt: this.saltValueToStoreWith
           });
           return encData;
         }
@@ -2338,6 +2348,9 @@ var EncryptedFileView = class extends import_obsidian2.MarkdownView {
     }
     return this.encData;
   }
+};
+var DEFAULT_SETTINGS = {
+  saltValue: DEFAULT_SALT_VALUE
 };
 var GlobalMarkdownEncrypt = class extends import_obsidian3.Plugin {
   createEncryptedNote() {
@@ -2350,7 +2363,8 @@ var GlobalMarkdownEncrypt = class extends import_obsidian3.Plugin {
       const encData = JSON.stringify({
         iv,
         tag,
-        ciphertext
+        ciphertext,
+        salt: this.settings.saltValue
       });
       this.app.vault.create(newFilepath, encData).then(async (f) => {
         const leaf = this.app.workspace.getLeaf(true);
@@ -2364,18 +2378,43 @@ var GlobalMarkdownEncrypt = class extends import_obsidian3.Plugin {
     }
   }
   async onload() {
+    await this.loadSettings();
+    this.addSettingTab(new GlobalMarkdownEncryptSettingTab(this.app, this));
     const ribbonIconEl = this.addRibbonIcon("file-lock-2", "new encrypted note", (evt) => {
       this.createEncryptedNote();
     });
     ribbonIconEl.addClass("gme-new-encrypted-note");
     this.registerExtensions(["aes256"], VIEW_TYPE_ENCRYPTED_FILE);
     new InputPasswordModal(this.app, async (password) => {
-      const key = await pbkdf2Async(password, "7f2ea27bd475702540c5211aed17904202a3ac06b0e87fdd8fcdec960a0fe388", 1e6);
+      const key = await pbkdf2Async(password, this.settings.saltValue, 1e6);
       this.aesCipher = aes256gcm(key);
-      this.registerView(VIEW_TYPE_ENCRYPTED_FILE, (leaf) => new EncryptedFileView(leaf, this.aesCipher));
+      this.registerView(VIEW_TYPE_ENCRYPTED_FILE, (leaf) => new EncryptedFileView(leaf, this.aesCipher, this.settings.saltValue));
     }).open();
   }
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+  async saveSettings(newSettings) {
+    await this.saveData(newSettings);
+  }
   onunload() {
+  }
+};
+var GlobalMarkdownEncryptSettingTab = class extends import_obsidian4.PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+  display() {
+    let { containerEl } = this;
+    containerEl.empty();
+    new import_obsidian.Setting(containerEl).setName("Salt for PBKDF2: restart to take effect").setDesc("WARNING: ALL PREVIOUS DATA IS TEMPORARILY NOT AVAILABLE, IF CHANGED. RECOMMENDED TO CHANGE THIS VALUE TO A STRONG RANDOM VALUE. (to restore the default value, uninstall and reinstall this plugin.)").addText(
+      (text) => text.setValue(this.plugin.settings.saltValue).onChange(async (value) => {
+        let newSettings = this.plugin.settings;
+        newSettings.saltValue = value;
+        await this.plugin.saveSettings(newSettings);
+      })
+    );
   }
 };
 var InputPasswordModal = class extends import_obsidian3.Modal {

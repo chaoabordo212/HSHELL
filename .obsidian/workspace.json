@@ -11,11 +11,9 @@
             "id": "8a2e809a3f9dec6c",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "mk-space",
               "state": {
-                "file": "hshell.d/hshell.d.md",
-                "mode": "preview",
-                "source": false
+                "path": "/"
               }
             }
           }
@@ -48,7 +46,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "tag:#task",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -66,14 +64,23 @@
             }
           },
           {
-            "id": "fe86573fa3818d60",
+            "id": "a3f9b7959eeb707b",
             "type": "leaf",
             "state": {
               "type": "mk-file-view",
               "state": {}
             }
+          },
+          {
+            "id": "e8b5185f81915469",
+            "type": "leaf",
+            "state": {
+              "type": "mk-path-view",
+              "state": {}
+            }
           }
-        ]
+        ],
+        "currentTab": 4
       }
     ],
     "direction": "horizontal",
@@ -134,46 +141,19 @@
                 "sortOrder": "frequency"
               }
             }
-          },
-          {
-            "id": "fa0ba15cd6447a86",
-            "type": "leaf",
-            "state": {
-              "type": "outline",
-              "state": {
-                "file": ",m.md"
-              }
-            }
-          },
-          {
-            "id": "e28957c8a868360a",
-            "type": "leaf",
-            "state": {
-              "type": "juggl_nodes",
-              "state": {}
-            }
-          },
-          {
-            "id": "0efa85ce99c265ef",
-            "type": "leaf",
-            "state": {
-              "type": "juggl_style",
-              "state": {}
-            }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
       "templater-obsidian:Templater": false,
-      "obsidian-importer:Open Importer": false,
-      "obsidian-import-json:JSON/CSV Importer": false,
       "juggl:Juggl global graph": false,
-      "omnisearch:Omnisearch": false,
       "terminal:Open terminal": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
@@ -185,26 +165,30 @@
       "zk-prefixer:Create new unique note": false,
       "audio-recorder:Start/stop recording": false,
       "workspaces:Manage workspace layouts": false,
-      "publish:Publish changes...": false
+      "publish:Publish changes...": false,
+      "obsidian-import-json:JSON/CSV Importer": false,
+      "omnisearch:Omnisearch": false,
+      "obsidian-importer:Open Importer": false
     }
   },
-  "active": "5f41785c0cbc1a38",
+  "active": "8a2e809a3f9dec6c",
   "lastOpenFiles": [
-    "_private.obsidian.asc",
-    "_public.obsidian.asc",
+    "Spaces/Home/Home.md",
+    "Spaces/Home",
+    "Spaces/Spaces.md",
+    "Spaces",
+    "2023-12-18.md",
+    "docs/Getting Started with Obsidian.md",
     "hshell.d/hshell.d.md",
     ",m.md",
+    "_private.obsidian.asc",
+    "_public.obsidian.asc",
     "INDEX.md",
     "keystore.d/keystore.d.md",
-    "Spaces/Spaces.md",
-    "Spaces/Home/Home.md",
     "docs/docs.md",
     "home.d/home.d.md",
     "README.md",
-    "Spaces/Home",
-    "Spaces",
     "config.d/config.d.md",
-    "docs/Getting Started with Obsidian.md",
     "config.d/yadm.conf",
     "config.d/hshell.conf",
     "docs/Yakitrak_obsidian-cli Interact with Obsidian in the terminal. Open, search, create, update, move and delete notes!.pdf",
@@ -213,7 +197,6 @@
     "docs/phind.pdf",
     "docs/HSHELL.ctb",
     "docs/Yet Another Obsidian Git Tutorial (Desktop PC & iPad Sync) - Share & showcase - Obsidian Forum.pdf",
-    "docs/HSHELL 1.ctb",
     "docs/config.d.md",
     "config.d.md",
     "Untitled/Untitled.md",
