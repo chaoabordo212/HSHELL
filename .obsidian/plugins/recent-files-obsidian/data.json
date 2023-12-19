@@ -1,8 +1,16 @@
 {
   "recentFiles": [
     {
-      "basename": "INDEX",
-      "path": "INDEX.md"
+      "basename": "INDEX.md",
+      "path": "INDEX.md.md"
+    },
+    {
+      "basename": "docs",
+      "path": "docs/docs.md"
+    },
+    {
+      "basename": "README.md",
+      "path": "README.md.md"
     },
     {
       "basename": "home.d",
