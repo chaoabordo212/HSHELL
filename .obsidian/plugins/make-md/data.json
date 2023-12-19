@@ -42,10 +42,8 @@
     "//Spaces",
     "//Spaces",
     "//Spaces",
-    "//config.d",
     "//home.d",
     "//hshell.d",
-    "//keystore.d",
     "/////",
     "///////"
   ],
@@ -56,7 +54,9 @@
   "folderContextFile": "context",
   "folderFrameFile": "frames",
   "spacesFolder": "Spaces",
-  "hiddenFiles": [],
+  "hiddenFiles": [
+    "Spaces"
+  ],
   "hiddenExtensions": [
     ".mdb"
   ],
