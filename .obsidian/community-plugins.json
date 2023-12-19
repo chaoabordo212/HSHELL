@@ -43,5 +43,6 @@
   "convert-url-to-iframe",
   "cmdr",
   "collapse-node",
-  "canvas-mindmap"
+  "canvas-mindmap",
+  "barcode-generator"
 ]
