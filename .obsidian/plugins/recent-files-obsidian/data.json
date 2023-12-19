@@ -5,6 +5,10 @@
       "path": "INDEX.md"
     },
     {
+      "basename": "home.d",
+      "path": "home.d/home.d.md"
+    },
+    {
       "basename": "Spaces",
       "path": "Spaces/Spaces.md"
     }

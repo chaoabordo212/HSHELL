@@ -44,5 +44,8 @@
   "cmdr",
   "collapse-node",
   "canvas-mindmap",
-  "barcode-generator"
+  "barcode-generator",
+  "obsidian-sort-and-permute-lines",
+  "obsidian-show-file-path",
+  "obsidian-task-archiver"
 ]
