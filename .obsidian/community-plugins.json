@@ -47,5 +47,17 @@
   "barcode-generator",
   "obsidian-sort-and-permute-lines",
   "obsidian-show-file-path",
-  "obsidian-task-archiver"
+  "obsidian-task-archiver",
+  "obsidian-enhancing-mindmap",
+  "theme-picker",
+  "settings-search",
+  "quickadd",
+  "inline-code-highlight",
+  "media-extended",
+  "obsidian-enhancing-export",
+  "obsidian-charts",
+  "quick-explorer",
+  "obsidian-livesync",
+  "global-markdown-encrypt",
+  "remotely-save"
 ]
