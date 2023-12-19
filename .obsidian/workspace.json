@@ -4,19 +4,15 @@
     "type": "split",
     "children": [
       {
-        "id": "764b0da2da409897",
+        "id": "c8fec96dc2971422",
         "type": "tabs",
         "children": [
           {
-            "id": "8a2e809a3f9dec6c",
+            "id": "a51b0cf5e0c4be5a",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "keystore.d/keystore.d.md",
-                "mode": "source",
-                "source": false
-              }
+              "type": "empty",
+              "state": {}
             }
           }
         ]
@@ -80,9 +76,17 @@
               "type": "mk-path-view",
               "state": {}
             }
+          },
+          {
+            "id": "12e57aecf4960c32",
+            "type": "leaf",
+            "state": {
+              "type": "recent-files",
+              "state": {}
+            }
           }
         ],
-        "currentTab": 4
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
@@ -102,7 +106,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "keystore.d/keystore.d.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -119,7 +122,6 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "keystore.d/keystore.d.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -151,9 +153,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "keystore.d/keystore.d.md"
-              }
+              "state": {}
             }
           },
           {
@@ -198,11 +198,19 @@
       "publish:Publish changes...": false,
       "obsidian-import-json:JSON/CSV Importer": false,
       "omnisearch:Omnisearch": false,
-      "obsidian-importer:Open Importer": false
+      "obsidian-importer:Open Importer": false,
+      "dbfolder:Create a new database table": false,
+      "webpage-html-export:Export Vault to HTML": false,
+      "workbench-obsidian:Workbench": false,
+      "yet-another-obsidian-synchronizer:YAOS": false,
+      "obsidian-extlnkhelper-plugin:Search External Links": false,
+      "obsidian-extract-pdf-highlights:PDF Highlights": false
     }
   },
-  "active": "8a2e809a3f9dec6c",
+  "active": "12e57aecf4960c32",
   "lastOpenFiles": [
+    "file-index.json",
+    "keystore.d/keystore.d.md",
     "Spaces/Home/Home.md",
     "Spaces/Home",
     "Spaces/Spaces.md",
@@ -215,7 +223,6 @@
     "keystore.d/_private.obsidian.asc",
     "keystore.d/_public.obsidian.asc",
     "INDEX.md",
-    "keystore.d/keystore.d.md",
     "docs/docs.md",
     "home.d/home.d.md",
     "README.md",
