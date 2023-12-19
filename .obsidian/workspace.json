@@ -11,9 +11,11 @@
             "id": "8a2e809a3f9dec6c",
             "type": "leaf",
             "state": {
-              "type": "mk-space",
+              "type": "markdown",
               "state": {
-                "path": "/"
+                "file": "keystore.d/keystore.d.md",
+                "mode": "source",
+                "source": false
               }
             }
           }
@@ -100,6 +102,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "keystore.d/keystore.d.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -116,6 +119,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "keystore.d/keystore.d.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -140,6 +144,32 @@
               "state": {
                 "sortOrder": "frequency"
               }
+            }
+          },
+          {
+            "id": "b6b81cf5aa0844dc",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "keystore.d/keystore.d.md"
+              }
+            }
+          },
+          {
+            "id": "332500edb813f7f3",
+            "type": "leaf",
+            "state": {
+              "type": "juggl_nodes",
+              "state": {}
+            }
+          },
+          {
+            "id": "392cefb69d025b21",
+            "type": "leaf",
+            "state": {
+              "type": "juggl_style",
+              "state": {}
             }
           }
         ],
@@ -177,12 +207,13 @@
     "Spaces/Home",
     "Spaces/Spaces.md",
     "Spaces",
+    "Vault.md",
     "2023-12-18.md",
     "docs/Getting Started with Obsidian.md",
     "hshell.d/hshell.d.md",
     ",m.md",
-    "_private.obsidian.asc",
-    "_public.obsidian.asc",
+    "keystore.d/_private.obsidian.asc",
+    "keystore.d/_public.obsidian.asc",
     "INDEX.md",
     "keystore.d/keystore.d.md",
     "docs/docs.md",
